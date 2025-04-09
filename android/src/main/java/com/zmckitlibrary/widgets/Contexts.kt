@@ -10,8 +10,6 @@ import android.view.View
 import java.io.File
 import java.util.UUID
 
-private const val TAG = "Contexts"
-
 /**
  * Attempts to find an [Activity] that this view is attached to, throws if it can't find one.
  */

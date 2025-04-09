@@ -27,7 +27,6 @@ import com.snap.camerakit.invoke
 import com.snap.camerakit.lenses.LensesComponent
 import com.snap.camerakit.lenses.whenHasSome
 import com.snap.camerakit.support.camera.AllowsCameraPreview
-import com.snap.camerakit.support.camera.AllowsPhotoCapture
 import com.snap.camerakit.support.camera.AllowsSnapshotCapture
 import com.snap.camerakit.support.camera.AspectRatio
 import com.snap.camerakit.support.camera.Crop

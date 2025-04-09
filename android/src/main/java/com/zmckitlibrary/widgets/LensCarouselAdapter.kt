@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
+import coil.load
 import com.snap.camerakit.lenses.LensesComponent
 import com.zmckitlibrary.R
 
@@ -31,10 +31,16 @@ class LensCarouselAdapter(
         val isSelected = position == selectedPosition
 
         // Load image with Glide
-        Glide.with(holder.imageView)
-            .load(lensList[position].icons.find { it is LensesComponent.Lens.Media.Image.Webp }?.uri)
-            .placeholder(R.drawable.placeholder_image)
-            .into(holder.imageView)
+//        Glide.with(holder.imageView)
+//            .load(lensList[position].icons.find { it is LensesComponent.Lens.Media.Image.Webp }?.uri)
+//            .placeholder(R.drawable.placeholder_image)
+//            .into(holder.imageView)
+
+        holder.imageView.load(
+            lensList[position].icons.find { it is LensesComponent.Lens.Media.Image.Webp }?.uri
+        ) {
+            placeholder(R.drawable.placeholder_image)
+        }
 
         // Apply border if selected
         holder.borderContainer.setBackgroundResource(if (isSelected) R.drawable.border_white else android.R.color.transparent)

@@ -4,10 +4,9 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
-import android.net.Uri
-import com.zmckitlibrary.widgets.ZMCameraLayout
 import com.zmckitlibrary.camera.Constants.EXTRA_IMAGE_URI
 import com.zmckitlibrary.camera.ImagePreviewActivity
+import com.zmckitlibrary.widgets.ZMCameraLayout
 
 class ZMCKitManager private constructor() {
 
