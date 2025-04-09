@@ -8,10 +8,10 @@ You can install `zmckit-library` using Yarn or npm:
 
 ```sh
 # Using Yarn
-yarn add https://github.com/mfsi-waseema/zmckit
+yarn add https://github.com/zarafshanwasi/SnapRNPackage
 
 # Using npm
-npm add https://github.com/mfsi-waseema/zmckit
+npm add https://github.com/zarafshanwasi/SnapRNPackage
 ```
 
 ## Permissions
