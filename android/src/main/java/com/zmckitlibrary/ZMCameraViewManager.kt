@@ -1,6 +1,5 @@
 package com.zmckitlibrary
 
-import android.net.Uri
 import android.view.Choreographer
 import android.view.View
 import android.widget.FrameLayout
@@ -9,10 +8,10 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
-import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.zmckitlibrary.widgets.ZMCameraLayout
 
 class ZMCameraViewManager(private val reactContext: ReactApplicationContext) : ViewGroupManager<FrameLayout>() {
@@ -123,10 +122,10 @@ class ZMCameraViewManager(private val reactContext: ReactApplicationContext) : V
             lensId = lensId!!,
             cameraFacingFront = showFrontCamera,
             cameraListener = object : ZMCKitManager.ZMCameraListener {
-                override fun onImageCaptured(imageUri: Uri) {
+                override fun onImageCaptured(imageUri: String) {
                     // Emit captured image event to React Native
                     val params = Arguments.createMap()
-                    params.putString("imageUri", imageUri.toString())
+                    params.putString("imageUri", imageUri)
                     sendEvent("onImageCaptured", params)
                 }
 
@@ -152,10 +151,10 @@ class ZMCameraViewManager(private val reactContext: ReactApplicationContext) : V
             partnerGroupId = groupId!!,
             cameraFacingFront = showFrontCamera,
             cameraListener = object : ZMCKitManager.ZMCameraListener {
-                override fun onImageCaptured(imageUri: Uri) {
+                override fun onImageCaptured(imageUri: String) {
                     // Emit captured image event to React Native
                     val params = Arguments.createMap()
-                    params.putString("imageUri", imageUri.toString())
+                    params.putString("imageUri", imageUri)
                     sendEvent("onImageCaptured", params)
                 }
 

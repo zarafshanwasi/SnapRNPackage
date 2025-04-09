@@ -6,13 +6,8 @@ import android.util.AttributeSet
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
-import com.snap.camerakit.Session
-import com.snap.camerakit.lenses.LensesComponent
-import com.snap.camerakit.lenses.whenHasSome
 import com.zmckitlibrary.R
 import com.zmckitlibrary.ZMCKitManager
-import java.io.Closeable
-import java.util.concurrent.atomic.AtomicBoolean
 
 class ZMCameraLayout @JvmOverloads constructor(
     context: Context,
@@ -21,7 +16,6 @@ class ZMCameraLayout @JvmOverloads constructor(
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
 
     private lateinit var snapCameraLayout: SnapCameraLayout
-    private val closeOnDestroy = mutableListOf<Closeable>()
 
     // Private initialize method
     private fun initialize(
@@ -38,17 +32,14 @@ class ZMCameraLayout @JvmOverloads constructor(
                 apiToken(apiToken)
             }
 
-            onSessionAvailable { session ->
-                handleSessionAvailable(
-                    session, lensGroupIds,
-                    applyLensById, cameraFacingFront
-                )
+            onSessionAvailable {
+                snapCameraLayout.loadLensGroup(lensGroupIds, applyLensById, cameraFacingFront)
             }
 
             onImageTaken { bitmap ->
                 try {
                     val imageFile = context.cacheJpegOf(bitmap)
-                    cameraListener?.onImageCaptured(Uri.fromFile(imageFile))
+                    cameraListener?.onImageCaptured(imageFile.toURI().toString())
                     if (cameraListener?.shouldShowDefaultPreview() == true) {
                         ZMCKitManager.showPreview(context, imageFile.absolutePath)
                     }
@@ -67,41 +58,6 @@ class ZMCameraLayout @JvmOverloads constructor(
                 }
             }
         }
-    }
-
-    private fun handleSessionAvailable(
-        session: Session,
-        lensGroupIds: Set<String>,
-        applyLensById: String?,
-        cameraFacingFront: Boolean
-    ) {
-        val appliedLensById = AtomicBoolean()
-        closeOnDestroy.add(
-            session.lenses.repository.observe(
-                LensesComponent.Repository.QueryCriteria.Available(lensGroupIds)
-            ) { result ->
-                result.whenHasSome { lenses ->
-                    if (!applyLensById.isNullOrEmpty()) {
-                        lenses.find { lens -> lens.id == applyLensById }?.let { lens ->
-                            if (appliedLensById.compareAndSet(false, true)) {
-                                session.lenses.processor.apply(
-                                    lens, LensesComponent.Lens.LaunchData.Empty
-                                )
-                            }
-                        }
-                    } else {
-                        requireActivity().runOnUiThread {
-                            snapCameraLayout.setupCarousel(lenses)
-                        }
-
-                        lenses.first().let {
-                            snapCameraLayout.applyLens(it)
-                        }
-                    }
-                }
-            }
-        )
-        snapCameraLayout.startPreview(facingFront = cameraFacingFront)
     }
 
     // Public function to launch the camera in product view mode (single lens mode)
@@ -135,13 +91,6 @@ class ZMCameraLayout @JvmOverloads constructor(
             applyLensById = null,
             cameraListener = cameraListener
         )
-    }
-
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        closeOnDestroy.forEach { closeable ->
-            closeable.close()
-        }
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {

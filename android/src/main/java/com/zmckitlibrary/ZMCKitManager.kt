@@ -14,7 +14,7 @@ class ZMCKitManager private constructor() {
     // Notify listeners when lens changes
     interface ZMCameraListener : java.io.Serializable {
         // Required method to handle image capture
-        fun onImageCaptured(imageUri: Uri)
+        fun onImageCaptured(imageUri: String)
 
         // Required method to handle lens change
         fun onLensChange(lensId: String)

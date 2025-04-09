@@ -25,8 +25,10 @@ import com.snap.camerakit.Source
 import com.snap.camerakit.common.Consumer
 import com.snap.camerakit.invoke
 import com.snap.camerakit.lenses.LensesComponent
+import com.snap.camerakit.lenses.whenHasSome
 import com.snap.camerakit.support.camera.AllowsCameraPreview
 import com.snap.camerakit.support.camera.AllowsPhotoCapture
+import com.snap.camerakit.support.camera.AllowsSnapshotCapture
 import com.snap.camerakit.support.camera.AspectRatio
 import com.snap.camerakit.support.camera.Crop
 import com.snap.camerakit.support.camerax.CameraXImageProcessorSource
@@ -38,11 +40,12 @@ import java.io.Closeable
 import java.lang.ref.WeakReference
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 private val DEFAULT_REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
 
-open class SnapCameraLayout @JvmOverloads constructor(
+class SnapCameraLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
@@ -85,9 +88,22 @@ open class SnapCameraLayout @JvmOverloads constructor(
         callback: (succeeded: Boolean) -> Unit = {}
     ) {
         isCameraFacingFront = facingFront
-        val options = emptySet<ImageProcessor.Input.Option>()
+        val inputOptions = mutableSetOf<ImageProcessor.Input.Option>()
         val cropOption = Crop.None
         val aspectRatio = AspectRatio.RATIO_16_9
+        val mirrorFramesHorizontally = false
+
+        // On Android, in case if camera is facing front, frames are mirrored by default
+        // in that case in order to support consistency between platforms I need to
+        // invert the vertical frames mirroring if camera is facing front.
+        if (facingFront && !mirrorFramesHorizontally) {
+            inputOptions.add(ImageProcessor.Input.Option.MirrorFramesHorizontally)
+        }
+        // With the back camera behaviour is the same for both platforms.
+        else if(!facingFront && mirrorFramesHorizontally){
+            inputOptions.add(ImageProcessor.Input.Option.MirrorFramesHorizontally)
+        }
+
 
         val configuration = AllowsCameraPreview.Configuration.Default(
             facingFront,
@@ -96,7 +112,7 @@ open class SnapCameraLayout @JvmOverloads constructor(
         )
 
         (activeImageProcessorSource as? AllowsCameraPreview)?.startPreview(
-            configuration, options, callback
+            configuration, inputOptions, callback
         )
     }
 
@@ -176,7 +192,41 @@ open class SnapCameraLayout @JvmOverloads constructor(
         setupCaptureButton()
     }
 
-    fun setupCarousel(result: List<LensesComponent.Lens>) {
+     fun loadLensGroup(
+        lensGroupIds: Set<String>,
+        applyLensById: String?,
+        cameraFacingFront: Boolean
+    ) {
+        cameraKitSession?.let { session ->
+            val appliedLensById = AtomicBoolean()
+            closeOnDetach.add(
+                session.lenses.repository.observe(
+                    LensesComponent.Repository.QueryCriteria.Available(lensGroupIds)
+                ) { result ->
+                    result.whenHasSome { lenses ->
+                        if (!applyLensById.isNullOrEmpty()) {
+                            lenses.find { lens -> lens.id == applyLensById }?.let { lens ->
+                                if (appliedLensById.compareAndSet(false, true)) {
+                                    session.lenses.processor.apply(
+                                        lens, LensesComponent.Lens.LaunchData.Empty
+                                    )
+                                }
+                            }
+                        } else {
+                            requireActivity().runOnUiThread {
+                                setupCarousel(lenses)
+                            }
+
+                            applyLens(lenses.first())
+                        }
+                    }
+                }
+            )
+            startPreview(facingFront = cameraFacingFront)
+        }
+    }
+
+    private fun setupCarousel(result: List<LensesComponent.Lens>) {
         lensRecyclerView = findViewById(R.id.lens_carousel)
         // Setup RecyclerView
         val adapter = LensCarouselAdapter(result) { lens ->
@@ -191,7 +241,7 @@ open class SnapCameraLayout @JvmOverloads constructor(
         snapHelper.attachToRecyclerView(lensRecyclerView)
     }
 
-    fun applyLens(lens: LensesComponent.Lens) {
+    private fun applyLens(lens: LensesComponent.Lens) {
 //        val usingCorrectCamera =
 //            cameraFacingFront.xor(lens.facingPreference != LensesComponent.Lens.Facing.FRONT)
 //        if (!usingCorrectCamera) {
@@ -228,8 +278,8 @@ open class SnapCameraLayout @JvmOverloads constructor(
                 override fun onEnd(captureType: SnapButtonView.CaptureType) {
                     isSessionCapturing = false
                     if (captureType == SnapButtonView.CaptureType.SNAPSHOT) {
-                        (activeImageProcessorSource as? AllowsPhotoCapture)
-                            ?.takePhoto(onImageTaken)
+                        (activeImageProcessorSource as? AllowsSnapshotCapture)
+                            ?.takeSnapshot(onImageTaken)
                     }
                 }
             }
