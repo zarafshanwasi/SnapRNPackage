@@ -249,9 +249,7 @@ class SnapCameraLayout @JvmOverloads constructor(
         cameraKitSession?.let {
             it.lenses.processor.apply(lens) { success ->
                 if (success) {
-                    onAppliedLens {
-                        lens.id
-                    }
+                    onAppliedLens(lens.id)
                 }
             }
         }
