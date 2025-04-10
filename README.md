@@ -8,10 +8,10 @@ You can install `zmckit-library` using Yarn or npm:
 
 ```sh
 # Using Yarn
-yarn add https://github.com/zarafshanwasi/SnapRNPackage
+yarn add https://github.com/idealinktr/zmkit-hybrid
 
 # Using npm
-npm add https://github.com/zarafshanwasi/SnapRNPackage
+npm add https://github.com/idealinktr/zmkit-hybrid
 ```
 
 ## Permissions
@@ -88,7 +88,3 @@ import { SingleProductView, GroupProductView } from 'react-native-zmckit-library
 ## License
 
 This library is licensed under the [MIT License](LICENSE).
-
----
-For any issues or contributions, please open a pull request or issue on the [GitHub repository](https://github.com/mfsi-waseema/zmckit).
-
